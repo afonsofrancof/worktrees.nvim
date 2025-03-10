@@ -2,8 +2,6 @@
 
 A simple and configurable Neovim plugin for working with Git worktrees.
 
-![License](https://img.shields.io/github/license/afonsofrancof/worktrees.nvim)
-
 `worktrees.nvim` makes it easy to create, delete, and switch between Git worktrees directly from Neovim. 
 When switching between worktrees, it will try to open the same file in the target worktree if it exists.
 
@@ -97,7 +95,7 @@ require('worktrees').setup({
 
 ```lua
 require('worktrees').setup({
-  base_path = "../.."  -- worktrees inside same directory as .git
+  base_path = "../.."  -- worktrees outside the repo 
 })
 ```
 

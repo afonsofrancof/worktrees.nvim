@@ -5,6 +5,10 @@ A simple and configurable Neovim plugin for working with Git worktrees.
 `worktrees.nvim` makes it easy to create, delete, and switch between Git worktrees directly from Neovim. 
 When switching between worktrees, it will try to open the same file in the target worktree if it exists.
 
+## Demo
+
+https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
+
 ## Features
 
 - Create new Git worktrees with branch creation

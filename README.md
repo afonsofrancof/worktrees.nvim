@@ -75,15 +75,7 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
 
 ```lua
 require('worktrees').setup({
-  base_path = ".."  -- worktrees at same level as .git directory
-})
-```
-
-#### Worktrees in a dedicated directory
-
-```lua
-require('worktrees').setup({
-  base_path = "../.worktrees"  -- worktrees in .worktrees folder
+  base_path = ".."  -- worktrees at the parent directory of the .git directory
 })
 ```
 

@@ -1,5 +1,5 @@
 local M = {}
-
+local git = require("worktrees.git")
 -- Default configuration
 local config = {
     -- Path relative to git common dir where worktrees will be created
@@ -11,21 +11,9 @@ local config = {
     path_template = "{branch}",
 }
 
--- Get the git common directory
-local function get_git_common_dir()
-    local result = vim.system({ "git", "rev-parse", "--git-common-dir" }, { text = true }):wait()
-
-    if result.code ~= 0 or result.stdout == "" then
-        return nil
-    end
-
-    local git_dir = vim.trim(result.stdout)
-    return vim.fs.normalize(vim.fn.fnamemodify(git_dir, ":p:h"))
-end
-
 -- Calculate base path for new worktrees based on config
 local function get_base_path()
-    local common_dir = get_git_common_dir()
+    local common_dir = git.get_git_common_dir()
 
     if not common_dir then
         vim.notify("Not in a git repository", vim.log.levels.ERROR)
@@ -37,62 +25,6 @@ local function get_base_path()
     return vim.fs.normalize(vim.fs.joinpath(common_dir, config.base_path))
 end
 
--- Get the repository root (top-level directory of current worktree)
-local function get_worktree_root()
-    local result = vim.system({ "git", "rev-parse", "--show-toplevel" }, { text = true }):wait()
-
-    if result.code ~= 0 or result.stdout == "" then
-        return nil
-    end
-
-    local root = vim.trim(result.stdout)
-    return vim.fs.normalize(vim.fn.fnamemodify(root, ":p:h"))
-end
-
--- Get all worktrees (non-bare only)
-local function get_worktrees()
-    local result = vim.system({ "git", "worktree", "list", "--porcelain" }, { text = true }):wait()
-
-    if result.code ~= 0 or result.stdout == "" then
-        vim.notify("No git worktrees found", vim.log.levels.ERROR)
-        return nil, 0
-    end
-
-    local output = result.stdout or ""
-    local worktrees = {}
-    local count = 0
-
-    -- Split by double newlines to get blocks per worktree
-    local blocks = vim.split(output, "\n\n", { trimempty = true })
-
-    for _, block in ipairs(blocks) do
-        local worktree = {}
-        local is_bare = false
-
-        -- Process each line in the block
-        local lines = vim.split(block, "\n", { trimempty = true })
-        for _, line in ipairs(lines) do
-            if line:match("^worktree ") then
-                worktree.path = line:match("^worktree (.+)")
-            elseif line:match("^branch ") then
-                worktree.branch = line:match("^branch (.+)")
-                worktree.name = worktree.branch:gsub("refs/heads/", "")
-            elseif line:match("^HEAD ") then
-                worktree.head = line:match("^HEAD (.+)")
-            elseif line == "bare" then
-                is_bare = true
-            end
-        end
-
-        if worktree.path and not is_bare then
-            table.insert(worktrees, worktree)
-            count = count + 1
-        end
-    end
-
-    return worktrees, count
-end
-
 -- Get the corresponding file path in another worktree
 local function get_current_file_in_other_worktree(target_worktree_path)
     local current_file = vim.fn.expand("%:p")
@@ -100,7 +32,7 @@ local function get_current_file_in_other_worktree(target_worktree_path)
         return nil
     end
 
-    local current_worktree = get_worktree_root()
+    local current_worktree = git.get_worktree_root()
     if not current_worktree then
         return nil
     end
@@ -153,7 +85,7 @@ M.utils.switch_worktree = function(path)
 
     -- Try to find branch name for the worktree
     local branch_name = nil
-    local worktrees = get_worktrees()
+    local worktrees = git.get_worktrees()
     if worktrees then
         for _, wt in ipairs(worktrees) do
             if vim.fs.normalize(wt.path) == normalized_path then
@@ -232,7 +164,7 @@ M.utils.create_worktree = function(path, branch)
         vim.notify("Created worktree: " .. branch .. " at " .. worktree_path, vim.log.levels.INFO)
 
         -- Check if this is the first worktree, if so switch to it
-        local _, count = get_worktrees()
+        local _, count = git.get_worktrees()
         if count == 1 then
             vim.schedule(function()
                 M.utils.switch_worktree(worktree_path)
@@ -290,7 +222,7 @@ end
 
 -- Interactive worktree deletion
 M.delete = function()
-    local worktrees, number_of_worktrees = get_worktrees()
+    local worktrees, number_of_worktrees = git.get_worktrees()
     if not worktrees or number_of_worktrees == 0 then
         vim.notify("No worktrees found", vim.log.levels.ERROR)
         return
@@ -329,14 +261,14 @@ end
 
 -- Interactive worktree switching
 M.switch = function()
-    local worktrees, number_of_worktrees = get_worktrees()
+    local worktrees, number_of_worktrees = git.get_worktrees()
     if not worktrees or number_of_worktrees == 0 then
         vim.notify("No worktrees found", vim.log.levels.ERROR)
         return
     end
 
     -- Get current worktree path if it exists
-    local current_worktree_path = get_worktree_root() or ""
+    local current_worktree_path = git.get_worktree_root() or ""
 
     -- Filter out current worktree
     local other_worktrees = {}

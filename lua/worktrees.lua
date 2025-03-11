@@ -130,6 +130,9 @@ M.utils.create_worktree = function(path, branch)
         return false
     end
 
+    -- Trim whitespace from path if it exists
+    path = path and vim.trim(path)
+
     -- Determine the worktree path
     local worktree_path
     if path and path ~= "" then

@@ -39,14 +39,14 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
           -- This is only used if you don't specify the folder name when creating the worktree
           path_template = "{branch}",  -- Default: use branch name
           
-          -- Command names
+          -- Command names (optional)
           commands = {
             create = "WorktreeCreate",
             delete = "WorktreeDelete",
             switch = "WorktreeSwitch",
           },
           
-          -- Key mappings
+          -- Key mappings (optional)
           mappings = {
             create = "<leader>wtc",
             delete = "<leader>wtd",

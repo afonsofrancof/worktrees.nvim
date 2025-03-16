@@ -29,7 +29,8 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
 
 ```lua
 {
-   'afonsofrancof/worktrees.nvim',
+   "afonsofrancof/worktrees.nvim",
+   event = "VeryLazy",
    opts = {
           -- Specify where to create worktrees relative to git common dir
           -- The common dir is the .git dir in a normal repo or the root dir of a bare repo

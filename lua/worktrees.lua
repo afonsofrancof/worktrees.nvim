@@ -227,7 +227,6 @@ end
 M.delete = function()
     local worktrees, number_of_worktrees = git.get_worktrees()
     if not worktrees or number_of_worktrees == 0 then
-        vim.notify("No worktrees found", vim.log.levels.ERROR)
         return
     end
 
@@ -266,7 +265,6 @@ end
 M.switch = function()
     local worktrees, number_of_worktrees = git.get_worktrees()
     if not worktrees or number_of_worktrees == 0 then
-        vim.notify("No worktrees found", vim.log.levels.ERROR)
         return
     end
 

@@ -19,7 +19,7 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
 
 ## Requirements
 
-- Neovim 0.7.0 or higher
+- Neovim 0.11.0 or higher
 - Git installed and accessible in path
 - A Git repository
 

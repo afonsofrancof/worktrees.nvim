@@ -119,7 +119,7 @@ M.utils.switch_worktree = function(path)
 end
 
 -- Create a new worktree
-M.utils.create_worktree = function(path, branch)
+M.utils.create_worktree = function(path, branch, switch)
     if not branch or branch == "" then
         vim.notify("Branch name is required", vim.log.levels.ERROR)
         return false
@@ -172,7 +172,7 @@ M.utils.create_worktree = function(path, branch)
 
         -- Check if this is the first worktree, if so switch to it
         local _, count = git.get_worktrees()
-        if count == 1 then
+        if count == 1 or switch == true then
             vim.schedule(function()
                 M.utils.switch_worktree(worktree_path)
             end)

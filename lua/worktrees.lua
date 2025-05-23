@@ -154,6 +154,10 @@ M.utils.create_worktree = function(path, branch)
         ))
     end
 
+    -- Make sure the branch exists
+    -- No need to check the exit code; it creates the branch if it doesn't exists and harmlessly barfs if it does
+    vim.system({ "git", "branch", branch }):wait()
+
     -- Create the worktree
     local result = vim.system({
         "git", "worktree", "add",

@@ -55,7 +55,7 @@ local function get_current_file_in_other_worktree(target_worktree_path)
     local target_file = vim.fs.joinpath(target_worktree_path, relative_path)
 
     -- Check if the file exists in the target worktree
-    local stat = vim.loop.fs_stat(target_file)
+    local stat = vim.uv.fs_stat(target_file)
     if stat then
         return target_file
     else
@@ -77,7 +77,7 @@ M.utils.switch_worktree = function(path)
     local normalized_path = vim.fs.normalize(path)
 
     -- Check if the path exists
-    local stat = vim.loop.fs_stat(normalized_path)
+    local stat = vim.uv.fs_stat(normalized_path)
     if not stat or stat.type ~= "directory" then
         vim.notify("Worktree path does not exist: " .. path, vim.log.levels.ERROR)
         return false

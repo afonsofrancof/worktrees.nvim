@@ -55,7 +55,7 @@ local function get_current_file_in_other_worktree(target_worktree_path)
     local target_file = vim.fs.joinpath(target_worktree_path, relative_path)
 
     -- Check if the file exists in the target worktree
-    local stat = vim.loop.fs_stat(target_file)
+    local stat = vim.uv.fs_stat(target_file)
     if stat then
         return target_file
     else
@@ -77,7 +77,7 @@ M.utils.switch_worktree = function(path)
     local normalized_path = vim.fs.normalize(path)
 
     -- Check if the path exists
-    local stat = vim.loop.fs_stat(normalized_path)
+    local stat = vim.uv.fs_stat(normalized_path)
     if not stat or stat.type ~= "directory" then
         vim.notify("Worktree path does not exist: " .. path, vim.log.levels.ERROR)
         return false
@@ -119,15 +119,19 @@ M.utils.switch_worktree = function(path)
 end
 
 -- Create a new worktree
-M.utils.create_worktree = function(path, branch)
+---@param path string path to the new worktree
+---@param branch string name of the branch to use in the new worktree
+---@param switch? boolean should the plugin switch to the newly created worktree
+---@return string|nil # path of the new worktree if it was created successfully
+M.utils.create_worktree = function(path, branch, switch)
     if not branch or branch == "" then
         vim.notify("Branch name is required", vim.log.levels.ERROR)
-        return false
+        return nil
     end
 
     local base_path = get_base_path()
     if not base_path then
-        return false
+        return nil
     end
 
     -- Trim whitespace from path if it exists
@@ -166,19 +170,19 @@ M.utils.create_worktree = function(path, branch)
 
     if result.code ~= 0 then
         vim.notify("Failed to create worktree: " .. (result.stderr or ""), vim.log.levels.ERROR)
-        return false
+        return nil
     else
         vim.notify("Created worktree: " .. branch .. " at " .. worktree_path, vim.log.levels.INFO)
 
         -- Check if this is the first worktree, if so switch to it
         local _, count = git.get_worktrees()
-        if count == 1 then
+        if count == 1 or switch == true then
             vim.schedule(function()
                 M.utils.switch_worktree(worktree_path)
             end)
         end
 
-        return true
+        return worktree_path
     end
 end
 
@@ -222,7 +226,19 @@ M.create = function()
                 return
             end
 
-            M.utils.create_worktree(path, branch)
+            path = M.utils.create_worktree(path, branch)
+            -- Check if creation succeeded
+            if not path then
+                return
+            end
+            -- Use a select prompt for confirmation instead of text input
+            vim.ui.select({ "No", "Yes" }, {
+                prompt = "Switch to the new worktree?",
+            }, function(confirm)
+                if confirm == "Yes" then
+                    M.utils.switch_worktree(path)
+                end
+            end)
         end)
     end)
 end

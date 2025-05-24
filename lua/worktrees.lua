@@ -67,6 +67,8 @@ end
 M.utils = {}
 
 -- Switch to a worktree by path
+---@param path string path to the worktree
+---@return boolean # Indicates if the switch was successfull
 M.utils.switch_worktree = function(path)
     if not path or path == "" then
         vim.notify("Worktree path is required", vim.log.levels.ERROR)
@@ -187,6 +189,8 @@ M.utils.create_worktree = function(path, branch, switch)
 end
 
 -- Delete a worktree by path
+---@param path string path to the worktree
+---@return boolean # Indicates if the deletion was successfull
 M.utils.delete_worktree = function(path)
     if not path or path == "" then
         vim.notify("Worktree path is required", vim.log.levels.ERROR)

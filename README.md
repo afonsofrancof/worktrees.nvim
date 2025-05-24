@@ -50,7 +50,7 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
             switch = "WorktreeSwitch",
           },
           
-          -- Key mappings (optional)
+          -- Key mappings for interactive UI (optional)
           mappings = {
             create = "<leader>wtc",
             delete = "<leader>wtd",
@@ -101,7 +101,7 @@ require('worktrees').setup({
 
 ## Usage
 
-### Commands
+### Commands (Interactive UI)
 
 | Command | Description |
 |---------|-------------|
@@ -109,17 +109,40 @@ require('worktrees').setup({
 | `:WorktreeDelete` | Delete a worktree with an interactive selector |
 | `:WorktreeSwitch` | Switch to another worktree with an interactive selector |
 
-### Functions (for scripting)
+### Functions (Interactive UI)
 
 ```lua
--- Creating a worktree programmatically
-require('worktrees').create_worktree("path/to/worktree", "feature-branch")
+-- Create a worktree interactively
+require('worktrees').create()
 
--- Deleting a worktree programmatically
-require('worktrees').delete_worktree("path/to/worktree")
+-- Switch to a worktree interactively
+require('worktrees').switch()
 
--- Switching to a worktree programmatically
-require('worktrees').switch_worktree("path/to/worktree")
+-- Delete a worktree interactively
+require('worktrees').delete()
+
+```
+
+### Functions (API)
+
+```lua
+-- Create a new worktree
+---@param path string path to the new worktree
+---@param branch string name of the branch to use in the new worktree
+---@param switch? boolean should the plugin switch to the newly created worktree
+---@return string|nil # path of the new worktree if it was created successfully
+require('worktrees').utils.create_worktree("path/to/worktree", "feature-branch", true)
+
+-- Switch to a worktree by path
+---@param path string path to the worktree
+---@return boolean # Indicates if the switch was successfull
+require('worktrees').utils.switch_worktree("path/to/worktree")
+
+-- Delete a worktree by path
+---@param path string path to the worktree
+---@return boolean # Indicates if the deletion was successfull
+require('worktrees').utils.delete_worktree("path/to/worktree")
+
 ```
 
 ## How It Works

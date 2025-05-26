@@ -1,0 +1,265 @@
+*worktrees.txt*
+
+Author: Afonso Franco
+License: MIT
+
+==============================================================================
+CONTENTS                                                    *worktrees-contents*
+
+1. Introduction ............................ |worktrees-introduction|
+2. Requirements ............................ |worktrees-requirements|
+3. Installation ............................ |worktrees-installation|
+4. Configuration ........................... |worktrees-configuration|
+5. Commands ................................ |worktrees-commands|
+6. Functions ............................... |worktrees-functions|
+7. Examples ................................ |worktrees-examples|
+
+==============================================================================
+1. INTRODUCTION                                         *worktrees-introduction*
+
+Worktrees is a Neovim plugin that provides interactive management of git
+worktrees. It allows you to create, delete, and switch between git worktrees
+with ease, featuring automatic file correspondence when switching between
+worktrees.
+
+Features:
+- Interactive creation, deletion, and switching of git worktrees
+- Configurable base path and path templates for new worktrees
+- Automatic file correspondence when switching between worktrees
+- Customizable commands and key mappings
+
+==============================================================================
+2. REQUIREMENTS                                         *worktrees-requirements*
+
+- Neovim 0.11.0 or later
+- Git
+- A git repository to work with
+
+==============================================================================
+3. INSTALLATION                                         *worktrees-installation*
+
+Using lazy.nvim: >lua
+    {
+        "afonsofrancof/worktrees.nvim",
+        config = function()
+            require("worktrees").setup()
+        end,
+    }
+<
+
+Using packer.nvim: >lua
+    use {
+        "afonsofrancof/worktrees.nvim",
+        config = function()
+            require("worktrees").setup()
+        end,
+    }
+<
+
+Using vim-plug: >vim
+    Plug 'afonsofrancof/worktrees.nvim'
+<
+
+Then in your init.lua: >lua
+    require("worktrees").setup()
+<
+
+==============================================================================
+4. CONFIGURATION                                       *worktrees-configuration*
+
+The plugin can be configured by passing a table to the setup function.
+
+Default configuration: >lua
+    require("worktrees").setup({
+        -- Path relative to git common dir where worktrees will be created
+        -- Examples: ".." (parent dir), "../.worktrees" (special dir), "." (same dir)
+        base_path = "..",
+
+        -- Path template for new worktrees, when one isn't manually provided
+        -- Use {branch} as placeholder for branch name
+        path_template = "{branch}",
+
+        -- Command names for interactive functions
+        commands = {
+            create = "WorktreeCreate",
+            delete = "WorktreeDelete",
+            switch = "WorktreeSwitch",
+        },
+
+        -- Optional key mappings
+        mappings = {
+            create = nil, -- e.g., "<leader>wc"
+            delete = nil, -- e.g., "<leader>wd"
+            switch = nil, -- e.g., "<leader>ws"
+        },
+    })
+<
+
+                                                        *worktrees-config-base_path*
+base_path ~
+    Type: string
+    Default: ".."
+
+    Path relative to the git common directory where new worktrees will be
+    created. Common values:
+    - ".." - Creates worktrees in the parent directory of the repository
+    - "../.worktrees" - Creates worktrees in a dedicated .worktrees directory
+    - "." - Creates worktrees in the same directory as the repository
+
+                                                   *worktrees-config-path_template*
+path_template ~
+    Type: string
+    Default: "{branch}"
+
+    Template for generating worktree paths when no specific path is provided.
+    Use {branch} as a placeholder for the branch name.
+    Examples:
+    - "{branch}" - Creates worktree with branch name as directory
+    - "wt-{branch}" - Prefixes worktree directories with "wt-"
+    - "{branch}-worktree" - Suffixes worktree directories with "-worktree"
+
+                                                      *worktrees-config-commands*
+commands ~
+    Type: table
+    Default: { create = "WorktreeCreate", delete = "WorktreeDelete", switch = "WorktreeSwitch" }
+
+    Names for the user commands created by the plugin.
+
+                                                      *worktrees-config-mappings*
+mappings ~
+    Type: table
+    Default: { create = nil, delete = nil, switch = nil }
+
+    Optional key mappings for worktree operations. Set to nil to disable.
+
+==============================================================================
+5. COMMANDS                                                 *worktrees-commands*
+
+                                                            *:WorktreeCreate*
+:WorktreeCreate
+    Interactively create a new git worktree. Prompts for:
+    1. Branch name for the new worktree
+    2. Path for the worktree (optional, uses template if empty)
+    3. Whether to switch to the new worktree after creation
+
+                                                            *:WorktreeDelete*
+:WorktreeDelete
+    Interactively delete an existing git worktree. Shows a list of available
+    worktrees and prompts for confirmation before deletion.
+
+                                                            *:WorktreeSwitch*
+:WorktreeSwitch
+    Interactively switch to another git worktree. Shows a list of available
+    worktrees (excluding the current one) and switches to the selected one.
+    Attempts to open the corresponding file in the target worktree if it exists.
+
+==============================================================================
+6. FUNCTIONS                                               *worktrees-functions*
+
+The plugin provides both interactive functions and utility functions for
+programmatic use.
+
+Interactive Functions ~
+
+                                                        *worktrees.create()*
+worktrees.create()
+    Interactive worktree creation function. Same as |:WorktreeCreate|.
+
+                                                        *worktrees.delete()*
+worktrees.delete()
+    Interactive worktree deletion function. Same as |:WorktreeDelete|.
+
+                                                        *worktrees.switch()*
+worktrees.switch()
+    Interactive worktree switching function. Same as |:WorktreeSwitch|.
+
+Utility Functions ~
+
+                                            *worktrees.utils.create_worktree()*
+worktrees.utils.create_worktree({path}, {branch}, {switch})
+    Create a new worktree programmatically.
+
+    Parameters: ~
+        {path}   (string|nil) Path for the new worktree. If nil or empty,
+                              uses the configured path template.
+        {branch} (string)     Name of the branch for the new worktree.
+        {switch} (boolean)    Whether to switch to the new worktree after
+                              creation.
+
+    Returns: ~
+        (string|nil) Path of the created worktree, or nil if creation failed.
+
+    Example: >lua
+        local path = require("worktrees").utils.create_worktree(
+            "feature-branch", 
+            "feature/new-feature", 
+            true
+        )
+        if path then
+            print("Created worktree at: " .. path)
+        end
+<
+
+                                            *worktrees.utils.delete_worktree()*
+worktrees.utils.delete_worktree({path})
+    Delete a worktree by path.
+
+    Parameters: ~
+        {path} (string) Path to the worktree to delete.
+
+    Returns: ~
+        (boolean) True if deletion was successful, false otherwise.
+
+    Example: >lua
+        local success = require("worktrees").utils.delete_worktree(
+            "/path/to/worktree"
+        )
+        if success then
+            print("Worktree deleted successfully")
+        end
+<
+
+                                            *worktrees.utils.switch_worktree()*
+worktrees.utils.switch_worktree({path})
+    Switch to a worktree by path.
+
+    Parameters: ~
+        {path} (string) Path to the worktree to switch to.
+
+    Returns: ~
+        (boolean) True if switch was successful, false otherwise.
+
+    Example: >lua
+        local success = require("worktrees").utils.switch_worktree(
+            "/path/to/worktree"
+        )
+        if success then
+            print("Switched to worktree successfully")
+        end
+<
+
+==============================================================================
+7. EXAMPLES                                                 *worktrees-examples*
+
+Basic setup: >lua
+    require("worktrees").setup()
+<
+
+Custom configuration: >lua
+    require("worktrees").setup({
+        base_path = "../.worktrees",
+        path_template = "wt-{branch}",
+        commands = {
+            create = "WtCreate",
+            delete = "WtDelete",
+            switch = "WtSwitch",
+        },
+        mappings = {
+            create = "<leader>wc",
+            delete = "<leader>wd",
+            switch = "<leader>ws",
+        },
+    })
+<
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

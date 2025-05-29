@@ -101,21 +101,21 @@ Worktrees.utils.switch_worktree = function(path)
     local corresponding_file = H.get_current_file_in_other_worktree(path)
 
     -- Change directory to the new worktree
-    vim.cmd("cd " .. vim.fn.fnameescape(path))
+    vim.cmd.cd(vim.fn.fnameescape(path))
 
     if corresponding_file then
         -- Switch to the corresponding file in the other worktree
-        vim.cmd("edit " .. vim.fn.fnameescape(corresponding_file))
+        vim.cmd.edit(vim.fn.fnameescape(corresponding_file))
         H.notify("Switched to worktree: " .. display_name, vim.log.levels.INFO)
     else
         -- Just change directory to the worktree
-        vim.cmd("edit .")
+        vim.cmd.edit(".")
         H.notify(
             "Switched to worktree: " .. display_name .. " (file not found)",
             vim.log.levels.INFO
         )
     end
-    vim.cmd("clearjumps")
+    vim.cmd.clearjumps()
 
     return true
 end

@@ -10,6 +10,7 @@
 --- - Configurable base path and path templates for new worktrees
 --- - Automatic file correspondence when switching between worktrees
 
+--- @class GitModule
 local git = require("worktrees.git")
 
 -- Module definition ==========================================================
@@ -67,6 +68,12 @@ Worktrees.utils = {}
 ---@param path string path to the worktree
 ---@return boolean success Indicates if the switch was successful
 Worktrees.utils.switch_worktree = function(path)
+    local worktrees = git.get_worktrees()
+    if not worktrees or vim.tbl_count(worktrees) == 0 then
+        H.notify("No git worktrees found in this repo", vim.log.levels.ERROR)
+        return false
+    end
+
     if not path or path == "" then
         H.notify("Worktree path is required", vim.log.levels.ERROR)
         return false
@@ -83,19 +90,18 @@ Worktrees.utils.switch_worktree = function(path)
     end
 
     -- Try to find branch name for the worktree
-    local branch_name = nil
-    local worktrees = git.get_worktrees()
-    if worktrees then
-        for _, wt in ipairs(worktrees) do
-            if vim.fs.normalize(wt.path) == normalized_path then
-                branch_name = wt.name
-                break
-            end
-        end
+    local target_worktree = worktrees[normalized_path]
+    if not target_worktree then
+        H.notify("Path is not a worktree in the current repository: " .. path, vim.log.levels.ERROR)
+        return false
     end
 
-    -- Prepare display name for notifications (branch name or path)
-    local display_name = branch_name or vim.fs.basename(normalized_path)
+    local branch_name = target_worktree.name
+
+    if not branch_name then
+        H.notify("Path is not a worktree in the current repository: " .. path, vim.log.levels.ERROR)
+        return false
+    end
 
     -- Check if the current file exists in the selected worktree
     local corresponding_file = H.get_current_file_in_other_worktree(path)
@@ -106,12 +112,12 @@ Worktrees.utils.switch_worktree = function(path)
     if corresponding_file then
         -- Switch to the corresponding file in the other worktree
         vim.cmd.edit(vim.fn.fnameescape(corresponding_file))
-        H.notify("Switched to worktree: " .. display_name, vim.log.levels.INFO)
+        H.notify("Switched to worktree: " .. branch_name, vim.log.levels.INFO)
     else
         -- Just change directory to the worktree
         vim.cmd.edit(".")
         H.notify(
-            "Switched to worktree: " .. display_name .. " (file not found)",
+            "Switched to worktree: " .. branch_name .. " (file not found)",
             vim.log.levels.INFO
         )
     end
@@ -188,8 +194,8 @@ Worktrees.utils.create_worktree = function(path, branch, switch)
         )
 
         -- Check if this is the first worktree, if so switch to it
-        local _, count = git.get_worktrees()
-        if count == 1 or switch == true then
+        local worktrees = git.get_worktrees()
+        if (worktrees and vim.tbl_count(worktrees) == 1) or switch == true then
             vim.schedule(function()
                 Worktrees.utils.switch_worktree(worktree_path)
             end)
@@ -266,15 +272,18 @@ end
 
 --- Interactive worktree deletion
 Worktrees.delete = function()
-    local worktrees, number_of_worktrees = git.get_worktrees()
-    if not worktrees or number_of_worktrees == 0 then
+    local worktrees = git.get_worktrees()
+    if not worktrees or vim.tbl_count(worktrees) == 0 then
         H.notify("No worktrees found", vim.log.levels.WARN)
         return
     end
 
+    ---@type Worktree[]
+    local worktree_list = vim.tbl_values(worktrees)
+
     -- Format worktrees for selection
     local items = {}
-    for _, wt in ipairs(worktrees) do
+    for _, wt in ipairs(worktree_list) do
         local branch_info = wt.name or vim.fn.fnamemodify(wt.path, ":t")
         local label = branch_info .. " (" .. wt.path .. ")"
         table.insert(items, label)
@@ -288,7 +297,7 @@ Worktrees.delete = function()
             return
         end
 
-        local selected_worktree = worktrees[idx]
+        local selected_worktree = worktree_list[idx]
 
         -- Use a select prompt for confirmation
         vim.ui.select({ "No", "Yes" }, {
@@ -305,23 +314,18 @@ end
 
 --- Interactive worktree switching
 Worktrees.switch = function()
-    local worktrees, number_of_worktrees = git.get_worktrees()
-    if not worktrees or number_of_worktrees == 0 then
+    local worktrees = git.get_worktrees()
+    if not worktrees or vim.tbl_count(worktrees) == 0 then
         H.notify("No worktrees found", vim.log.levels.WARN)
         return
     end
 
     -- Get current worktree path if it exists
-    local current_worktree_path = git.get_worktree_root() or ""
+    local current_worktree_path = vim.fs.normalize(git.get_worktree_root() or "")
 
-    -- Filter out current worktree
-    local other_worktrees = {}
-    for _, wt in ipairs(worktrees) do
-        -- Normalize paths before comparison to handle different path formats
-        if vim.fs.normalize(wt.path) ~= vim.fs.normalize(current_worktree_path) then
-            table.insert(other_worktrees, wt)
-        end
-    end
+    local other_worktrees = vim.tbl_filter(function(wt)
+        return wt.path ~= current_worktree_path
+    end, worktrees)
 
     if #other_worktrees == 0 then
         H.notify(

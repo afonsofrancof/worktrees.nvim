@@ -6,7 +6,7 @@ A simple and configurable Neovim plugin for working with Git worktrees.
 When switching between worktrees, it will try to open the same file in the target worktree if it exists.
 
 > [!NOTE]
-> This project is feature complete for its intended small scope of managing Git worktrees (create, delete, switch). While actively maintained, new features will be limited to improvements of existing functionality and simple additions within this scope. Pull requests are welcome as long as they align with these goals.
+> This project is feature complete for its intended small scope of managing Git worktrees (create, delete, switch). While actively maintained (don't be scared if there are no commits for a long time), new features will be limited to improvements of existing functionality and simple additions within this scope. Pull requests are welcome as long as they align with these goals.
 
 ## Demo
 

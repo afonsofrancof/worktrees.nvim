@@ -76,7 +76,7 @@ Default configuration: >lua
         base_path = "..",
 
         -- Path template for new worktrees, when one isn't manually provided
-        -- Use {branch} as placeholder for branch name
+        -- Use {branch} as placeholder for branch name, or provide a function(branch) -> path
         path_template = "{branch}",
 
         -- Command names for interactive functions
@@ -108,11 +108,12 @@ base_path ~
 
                                                    *worktrees-config-path_template*
 path_template ~
-    Type: string
+    Type: string|function
     Default: "{branch}"
 
     Template for generating worktree paths when no specific path is provided.
-    Use {branch} as a placeholder for the branch name.
+    Can be a string where {branch} is replaced with the branch name, or a
+    function(branch) that returns a path.
     Examples:
     - "{branch}" - Creates worktree with branch name as directory
     - "wt-{branch}" - Prefixes worktree directories with "wt-"

@@ -39,7 +39,7 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
           -- The common dir is the .git dir in a normal repo or the root dir of a bare repo
           base_path = "..",  -- Parent directory of common dir
           
-          -- Template for worktree folder names
+          -- Template for worktree folder names (string or function(branch) -> path)
           -- This is only used if you don't specify the folder name when creating the worktree
           path_template = "{branch}",  -- Default: use branch name
           
@@ -65,7 +65,7 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
 | Option | Description | Default |
 |--------|-------------|---------|
 | `base_path` | Path relative to git common directory where worktrees will be created | `".."` (parent directory) |
-| `path_template` | Template for worktree folder names, `{branch}` is replaced with branch name | `"{branch}"` |
+| `path_template` | Template for worktree folder names (`{branch}` is replaced with branch name), or a `function(branch)` returning a path | `"{branch}"` |
 | `commands.create` | Command name for creating worktrees | `"WorktreeCreate"` |
 | `commands.delete` | Command name for deleting worktrees | `"WorktreeDelete"` |
 | `commands.switch` | Command name for switching worktrees | `"WorktreeSwitch"` |

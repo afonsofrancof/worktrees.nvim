@@ -41,7 +41,7 @@ Worktrees.config = {
     base_path = "..",
 
     -- Path template for new worktrees, when one isn't manually provided
-    -- Use {branch} as placeholder for branch name
+    -- Use {branch} as placeholder for branch name, or provide a function(branch) -> path
     path_template = "{branch}",
 
     -- Command names for interactive functions
@@ -164,10 +164,12 @@ Worktrees.utils.create_worktree = function(path, branch, switch)
         end
     else
         -- Use the template to create a path
-        local path_from_template = Worktrees.config.path_template:gsub(
-            "{branch}",
-            branch
-        )
+        local path_from_template
+        if vim.is_callable(Worktrees.config.path_template) then
+            path_from_template = Worktrees.config.path_template(branch)
+        else
+            path_from_template = Worktrees.config.path_template:gsub("{branch}", branch)
+        end
         worktree_path = vim.fs.normalize(
             vim.fn.resolve(vim.fs.joinpath(base_path, path_from_template))
         )
@@ -376,7 +378,9 @@ H.setup_config = function(config)
     config = vim.tbl_deep_extend("force", vim.deepcopy(H.default_config), config or {})
 
     H.check_type("base_path", config.base_path, "string")
-    H.check_type("path_template", config.path_template, "string")
+    if type(config.path_template) ~= "string" and not vim.is_callable(config.path_template) then
+        H.error("`path_template` should be a string or callable, not " .. type(config.path_template))
+    end
     H.check_type("commands", config.commands, "table")
     H.check_type("mappings", config.mappings, "table")
 

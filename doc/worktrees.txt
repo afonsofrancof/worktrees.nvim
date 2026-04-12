@@ -26,6 +26,7 @@ Features:
 - Interactive creation, deletion, and switching of git worktrees
 - Configurable base path and path templates for new worktrees
 - Automatic file correspondence when switching between worktrees
+- Lifecycle hooks for create, delete, and switch events
 - Customizable commands and key mappings
 
 ==============================================================================
@@ -79,6 +80,11 @@ Default configuration: >lua
         -- Use {branch} as placeholder for branch name, or provide a function(branch) -> path
         path_template = "{branch}",
 
+        -- Lifecycle hooks (optional)
+        on_create = nil, -- function(path)
+        on_delete = nil, -- function(path)
+        on_switch = nil, -- function(from_path, to_path)
+
         -- Command names for interactive functions
         commands = {
             create = "WorktreeCreate",
@@ -118,6 +124,33 @@ path_template ~
     - "{branch}" - Creates worktree with branch name as directory
     - "wt-{branch}" - Prefixes worktree directories with "wt-"
     - "{branch}-worktree" - Suffixes worktree directories with "-worktree"
+
+                                                     *worktrees-config-on_create*
+on_create ~
+    Type: function|nil
+    Default: nil
+    Signature: function(path)
+
+    Called after a worktree is successfully created. Receives the absolute path
+    of the new worktree.
+
+                                                     *worktrees-config-on_delete*
+on_delete ~
+    Type: function|nil
+    Default: nil
+    Signature: function(path)
+
+    Called after a worktree is successfully deleted. Receives the absolute path
+    of the deleted worktree.
+
+                                                     *worktrees-config-on_switch*
+on_switch ~
+    Type: function|nil
+    Default: nil
+    Signature: function(from_path, to_path)
+
+    Called after a successful worktree switch. Receives the absolute paths of
+    the worktree switched from and the worktree switched to.
 
                                                       *worktrees-config-commands*
 commands ~
@@ -262,5 +295,19 @@ Custom configuration: >lua
         },
     })
 <
+Using lifecycle hooks: >lua
+    require("worktrees").setup({
+        on_create = function(path)
+            print("Created worktree at: " .. path)
+        end,
+        on_delete = function(path)
+            print("Deleted worktree at: " .. path)
+        end,
+        on_switch = function(from_path, to_path)
+            print("Switched from " .. from_path .. " to " .. to_path)
+        end,
+    })
+<
+
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

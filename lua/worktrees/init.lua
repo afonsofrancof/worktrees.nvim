@@ -44,6 +44,14 @@ Worktrees.config = {
     -- Use {branch} as placeholder for branch name, or provide a function(branch) -> path
     path_template = "{branch}",
 
+    -- Lifecycle hooks (optional)
+    -- on_create: called with (path) after a worktree is successfully created
+    on_create = nil,
+    -- on_delete: called with (path) after a worktree is successfully deleted
+    on_delete = nil,
+    -- on_switch: called with (from_path, to_path) after a successful worktree switch
+    on_switch = nil,
+
     -- Command names for interactive functions
     commands = {
         create = "WorktreeCreate",
@@ -71,6 +79,8 @@ Worktrees.utils = {}
 Worktrees.utils.switch_worktree = function(path, change_root)
     if change_root == nil then change_root = true end
 
+    local worktree_root = git.get_worktree_root()
+    local from_path = worktree_root and vim.fs.normalize(worktree_root) or nil
     local worktrees = git.get_worktrees()
     if not worktrees or vim.tbl_count(worktrees) == 0 then
         H.notify("No git worktrees found in this repo", vim.log.levels.ERROR)
@@ -128,6 +138,12 @@ Worktrees.utils.switch_worktree = function(path, change_root)
         )
     end
     vim.cmd.clearjumps()
+
+    if Worktrees.config.on_switch then
+        vim.schedule(function()
+            Worktrees.config.on_switch(from_path, normalized_path)
+        end)
+    end
 
     return true
 end
@@ -195,22 +211,28 @@ Worktrees.utils.create_worktree = function(path, branch, switch)
             vim.log.levels.ERROR
         )
         return nil
-    else
-        H.notify(
-            "Created worktree: " .. branch .. " at " .. worktree_path,
-            vim.log.levels.INFO
-        )
-
-        -- Check if this is the first worktree, if so switch to it
-        local worktrees = git.get_worktrees()
-        if (worktrees and vim.tbl_count(worktrees) == 1) or switch == true then
-            vim.schedule(function()
-                Worktrees.utils.switch_worktree(worktree_path,true)
-            end)
-        end
-
-        return worktree_path
     end
+
+    H.notify(
+        "Created worktree: " .. branch .. " at " .. worktree_path,
+        vim.log.levels.INFO
+    )
+
+    if Worktrees.config.on_create then
+        vim.schedule(function()
+            Worktrees.config.on_create(worktree_path)
+        end)
+    end
+
+    -- Check if this is the first worktree, if so switch to it
+    local worktrees = git.get_worktrees()
+    if (worktrees and vim.tbl_count(worktrees) == 1) or switch == true then
+        vim.schedule(function()
+            Worktrees.utils.switch_worktree(worktree_path,true)
+        end)
+    end
+
+    return worktree_path
 end
 
 --- Delete a worktree by path
@@ -236,10 +258,17 @@ Worktrees.utils.delete_worktree = function(path)
             vim.log.levels.ERROR
         )
         return false
-    else
-        H.notify("Deleted worktree at: " .. path, vim.log.levels.INFO)
-        return true
     end
+
+    H.notify("Deleted worktree at: " .. path, vim.log.levels.INFO)
+
+    if Worktrees.config.on_delete then
+        vim.schedule(function()
+            Worktrees.config.on_delete(path)
+        end)
+    end
+
+    return true
 end
 
 -- Interactive UI functions ===================================================
@@ -393,6 +422,11 @@ H.setup_config = function(config)
     H.check_type("mappings.create", config.mappings.create, "string", true)
     H.check_type("mappings.delete", config.mappings.delete, "string", true)
     H.check_type("mappings.switch", config.mappings.switch, "string", true)
+
+    -- Validate callbacks (callable or nil)
+    H.check_type("on_create", config.on_create, "callable", true)
+    H.check_type("on_delete", config.on_delete, "callable", true)
+    H.check_type("on_switch", config.on_switch, "callable", true)
 
     return config
 end

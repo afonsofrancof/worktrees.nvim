@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
 - Create new Git worktrees with branch creation
 - Delete worktrees with confirmation
 - Switch between worktrees while preserving your place in files
+- Lifecycle hooks for create, delete, and switch events
 - Customizable commands and keymaps
 - Works with any Git worktree structure
 
@@ -55,7 +56,12 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
             create = "<leader>wtc",
             delete = "<leader>wtd",
             switch = "<leader>wts",
-          }
+          },
+
+          -- Lifecycle hooks (optional)
+          on_create = function(path) end,
+          on_delete = function(path) end,
+          on_switch = function(from_path, to_path) end,
     }
 }
 ```
@@ -72,6 +78,9 @@ https://github.com/user-attachments/assets/9873ec7e-4660-4301-9618-82054af3eb1f
 | `mappings.create` | Key mapping for creating worktrees | `nil` (not set) |
 | `mappings.delete` | Key mapping for deleting worktrees | `nil` (not set) |
 | `mappings.switch` | Key mapping for switching worktrees | `nil` (not set) |
+| `on_create` | Callback `function(path)` called after a worktree is created | `nil` |
+| `on_delete` | Callback `function(path)` called after a worktree is deleted | `nil` |
+| `on_switch` | Callback `function(from_path, to_path)` called after switching worktrees | `nil` |
 
 ### Common Worktree Configurations
 
